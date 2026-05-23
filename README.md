@@ -61,6 +61,10 @@ The app includes demo fallback data if Supabase env vars are missing, so the res
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the system design, data flow, RPC design, Zustand structure, PWA notes, and tradeoffs.
 
+## Incomplete Features and Future Scope
+
+See [docs/INCOMPLETE_FEATURES.md](docs/INCOMPLETE_FEATURES.md) for the intentionally placeholder travel-product buttons and the roadmap for hotels, cars, nearby airports, direct-flight filtering, flexible search, and admin tooling.
+
 ## Zustand Store Structure
 
 - `useFlightStore`: search query, selected flight, selected seat, current booking step, and passenger form data. It persists search and in-progress booking state.
