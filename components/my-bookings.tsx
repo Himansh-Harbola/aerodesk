@@ -5,6 +5,7 @@ import { CalendarClock, Check, RotateCcw, X, XCircle } from "lucide-react";
 import { cancelBooking, rescheduleBooking } from "@/lib/actions";
 import type { BookingWithRelations, Flight } from "@/lib/types";
 import { dateTime, money } from "@/lib/format";
+import { createClient } from "@/lib/supabase/client";
 import { useFlightStore } from "@/stores/flight-store";
 import { useUserStore } from "@/stores/user-store";
 
@@ -42,9 +43,42 @@ export function MyBookings({
     }
   }, [initialBookings, setCachedBookings]);
 
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) return;
+    const browserClient = supabase;
+
+    let cancelled = false;
+
+    async function loadBookings() {
+      const { data, error } = await browserClient
+        .from("bookings")
+        .select("*, flights(*), seats(*), passengers(full_name, passport_no, nationality, dob)")
+        .order("booked_at", { ascending: false });
+
+      if (cancelled || error || !data) return;
+
+      const nextBookings = data as BookingWithRelations[];
+      setBookings(nextBookings);
+      if (nextBookings.length > 0) {
+        setCachedBookings(nextBookings);
+      }
+    }
+
+    void loadBookings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [setCachedBookings]);
+
   function cancel(id: string) {
     startTransition(async () => {
-      const response = await cancelBooking(id);
+      const supabase = createClient();
+      const response = supabase
+        ? await cancelBookingFromBrowser(supabase, id)
+        : await cancelBooking(id);
+
       setMessage(response.message);
       if (response.ok) {
         resetBooking();
@@ -56,7 +90,11 @@ export function MyBookings({
 
   function reschedule(booking: BookingWithRelations, newFlight: Flight) {
     startTransition(async () => {
-      const response = await rescheduleBooking(booking.id, newFlight.id);
+      const supabase = createClient();
+      const response = supabase
+        ? await rescheduleBookingFromBrowser(supabase, booking.id, newFlight.id)
+        : await rescheduleBooking(booking.id, newFlight.id);
+
       setMessage(response.message);
       if (response.ok) {
         const fee = Math.max(0, newFlight.base_price - booking.flights.base_price);
@@ -212,4 +250,29 @@ function badgeClass(status: BookingWithRelations["status"]) {
   if (status === "confirmed") return "bg-emerald-50 text-emerald-700";
   if (status === "rescheduled") return "bg-amber-50 text-amber-700";
   return "bg-slate-200 text-slate-700";
+}
+
+type BrowserSupabase = NonNullable<ReturnType<typeof createClient>>;
+
+async function cancelBookingFromBrowser(supabase: BrowserSupabase, bookingId: string) {
+  const { error } = await supabase.rpc("cancel_booking", { p_booking_id: bookingId });
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  return { ok: true, message: "Booking cancelled." };
+}
+
+async function rescheduleBookingFromBrowser(supabase: BrowserSupabase, bookingId: string, newFlightId: string) {
+  const { error } = await supabase.rpc("reschedule_booking", {
+    p_booking_id: bookingId,
+    p_new_flight_id: newFlightId,
+  });
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  return { ok: true, message: "Booking rescheduled." };
 }
