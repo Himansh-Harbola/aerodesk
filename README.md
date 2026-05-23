@@ -57,6 +57,10 @@ The app includes demo fallback data if Supabase env vars are missing, so the res
 - `202605230006_six_month_daily_network.sql` creates one scheduled flight per day for every directed airport pair already present in the flight table. With the current five airports, that is 3600 generated flights and full seat maps.
 - `202605230007_reschedule_seat_fallback.sql` improves rescheduling by automatically assigning another available seat if the original seat number is occupied on the new flight.
 
+## Architecture and Tradeoffs
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the system design, data flow, RPC design, Zustand structure, PWA notes, and tradeoffs.
+
 ## Zustand Store Structure
 
 - `useFlightStore`: search query, selected flight, selected seat, current booking step, and passenger form data. It persists search and in-progress booking state.
