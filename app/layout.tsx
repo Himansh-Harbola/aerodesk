@@ -4,6 +4,7 @@ import { Plane } from "lucide-react";
 import "./globals.css";
 import { InstallPrompt } from "@/components/install-prompt";
 import { AuthNav } from "@/components/auth-nav";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 
 export const metadata: Metadata = {
   title: "AeroDesk Flight Management",
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </nav>
           </div>
         </header>
+        <ServiceWorkerRegister />
         <InstallPrompt />
         {children}
       </body>
