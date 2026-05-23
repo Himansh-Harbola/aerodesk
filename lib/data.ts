@@ -9,12 +9,16 @@ type FlightFilter = {
   date?: string;
 };
 
-export async function getFlights(filter: FlightFilter): Promise<Flight[]> {
+type FlightQueryOptions = {
+  limit?: number;
+};
+
+export async function getFlights(filter: FlightFilter, options: FlightQueryOptions = {}): Promise<Flight[]> {
   noStore();
   const supabase = await createClient();
 
   if (!supabase || !hasSupabaseServerEnv) {
-    return filterDemoFlights(filter);
+    return filterDemoFlights(filter).slice(0, options.limit ?? 120);
   }
 
   let query = supabase.from("flights").select("*").order("departs_at", { ascending: true });
@@ -24,6 +28,8 @@ export async function getFlights(filter: FlightFilter): Promise<Flight[]> {
   if (filter.date) {
     query = query.gte("departs_at", `${filter.date}T00:00:00`).lt("departs_at", `${filter.date}T23:59:59`);
   }
+
+  query = query.limit(options.limit ?? 120);
 
   const { data, error } = await query;
   if (error) {

@@ -29,7 +29,7 @@ cp .env.example .env.local
 
 3. Create a Supabase project and paste the project URL and anon key into `.env.local`.
 
-4. Run the SQL files in `supabase/migrations` in order. They create tables, RLS policies, triggers, RPCs, and seed flights/seats. The later migrations add the safer reschedule RPC and more future reschedule options.
+4. Run the SQL files in `supabase/migrations` in order. They create tables, RLS policies, triggers, RPCs, and seed flights/seats. The later migrations add the safer reschedule RPC, more future reschedule options, and a six-month daily route network.
 
 5. Create a Supabase Auth test user:
 
@@ -52,6 +52,7 @@ The app includes demo fallback data if Supabase env vars are missing, so the res
 - `cancel_booking` updates booking status and frees the seat inside a single RPC. The `bookings_reject_late_cancellation` trigger blocks cancellations within two hours of departure at DB level.
 - `reschedule_booking` only allows same-route flight changes, moves the booking to the same seat number on the new flight when available, frees the old seat, locks the new seat, and charges the difference when the new flight is more expensive.
 - RLS is enabled on all tables. Users can read and mutate only their own booking-related rows. Flights and seats are public read models.
+- `202605230006_six_month_daily_network.sql` creates one scheduled flight per day for every directed airport pair already present in the flight table. With the current five airports, that is 3600 generated flights and full seat maps.
 
 ## Zustand Store Structure
 
