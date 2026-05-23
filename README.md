@@ -4,6 +4,8 @@ Flight Management web app for the internship assignment. It uses Next.js App Rou
 
 Production deployment: https://aerodesk-two.vercel.app
 
+GitHub repository: https://github.com/Himansh-Harbola/aerodesk
+
 ## Features
 
 - Search flights by origin, destination, date, and passenger count.
@@ -71,9 +73,25 @@ The app includes demo fallback data if Supabase env vars are missing, so the res
 - `/offline` document fallback.
 - Manifest includes 192x192 and 512x512 icons, standalone display, and theme color.
 
-Lighthouse screenshot: add `docs/lighthouse-pwa.png` after running an audit against the deployed URL.
+## Lighthouse and PWA Evidence
+
+Chrome Lighthouse audit on the deployed URL:
+
+![Lighthouse report](docs/lighthouse-report.png)
+
+PWA manifest:
+
+![PWA manifest](docs/pwa-manifest.png)
+
+Generated service worker:
+
+![Service worker](docs/service-worker.png)
+
+Install prompt / open in app:
+
+![Open in app](docs/open-in-app.png)
 
 ## Tradeoffs
 
 - Supabase Auth test users are documented instead of being inserted through SQL, because Supabase Auth user creation is normally handled through the Auth admin UI/API rather than ordinary public-table seed SQL.
-- The PWA setup is implemented, but the Lighthouse screenshot still needs to be captured from the final deployed URL and added to the README for the bonus checklist.
+- Chrome 148 no longer shows a separate PWA category in Lighthouse; PWA evidence is included through the manifest, generated service worker, and installability screenshots above.
