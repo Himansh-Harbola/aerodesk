@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+.env
+.env*.local
+*.tsbuildinfo
+coverage
+.vercel
+dev-server.log
+public/sw.js
+public/workbox-*.js
+public/fallback-*.js
