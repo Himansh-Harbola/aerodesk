@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { BedDouble, Car, Check, Globe2, Plane, Search, Sparkles, UsersRound } from "lucide-react";
 import { useFlightStore } from "@/stores/flight-store";
 import type { SearchQuery } from "@/lib/types";
+import { airports } from "@/lib/airports";
 
 export function LandingSearch() {
   const router = useRouter();
@@ -41,12 +42,17 @@ export function LandingSearch() {
       <form action={submit} className="mt-8 grid gap-1 lg:grid-cols-[1fr_1fr_0.95fr_0.95fr_1fr_auto]">
         <label className="grid min-h-24 gap-1 rounded-t-lg bg-white px-5 py-4 text-sm font-bold text-slate-600 lg:rounded-l-lg lg:rounded-tr-none">
           From
-          <input className="focus-ring min-w-0 text-lg font-medium text-slate-950 outline-none" name="origin" placeholder="Delhi" defaultValue="Delhi" />
+          <input className="focus-ring min-w-0 text-lg font-medium text-slate-950 outline-none" list="landing-airports" name="origin" placeholder="Delhi" defaultValue="Delhi" />
         </label>
         <label className="grid min-h-24 gap-1 bg-white px-5 py-4 text-sm font-bold text-slate-600">
           To
-          <input className="focus-ring min-w-0 text-lg font-medium text-slate-950 outline-none" name="destination" placeholder="Mumbai" defaultValue="Mumbai" />
+          <input className="focus-ring min-w-0 text-lg font-medium text-slate-950 outline-none" list="landing-airports" name="destination" placeholder="Mumbai" defaultValue="Mumbai" />
         </label>
+        <datalist id="landing-airports">
+          {airports.map((airport) => (
+            <option key={airport} value={airport} />
+          ))}
+        </datalist>
         <label className="grid min-h-24 gap-1 bg-white px-5 py-4 text-sm font-bold text-slate-600">
           Depart
           <input className="focus-ring min-w-0 text-lg font-medium text-slate-950 outline-none" name="date" type="date" />

@@ -202,8 +202,8 @@ export function MyBookings({
         )}
       </div>
       {rescheduleTarget ? (
-        <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/45 p-4">
-          <section className="max-h-[86vh] w-full max-w-3xl overflow-auto rounded-lg bg-white p-5 shadow-xl">
+        <div className="fixed inset-0 z-40 grid place-items-end bg-slate-950/45 p-0 sm:place-items-center sm:p-4">
+          <section className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-t-2xl bg-white p-5 shadow-xl sm:max-h-[86vh] sm:rounded-lg">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold text-slate-950">Choose a new flight</h2>
@@ -321,8 +321,8 @@ export function MyBookings({
         </div>
       ) : null}
       {cancelTarget ? (
-        <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/45 p-4">
-          <section className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl">
+        <div className="fixed inset-0 z-40 grid place-items-end bg-slate-950/45 p-0 sm:place-items-center sm:p-4">
+          <section className="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-lg">
             <h2 className="text-xl font-semibold text-slate-950">Cancel booking?</h2>
             <p className="mt-2 text-sm text-slate-600">
               PNR {cancelTarget.pnr_code} will be cancelled and the seat will be released. The database blocks cancellations within 2 hours of departure.

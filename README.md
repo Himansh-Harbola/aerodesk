@@ -7,10 +7,10 @@ Production deployment: https://aerodesk-two.vercel.app
 ## Features
 
 - Search flights by origin, destination, date, and passenger count.
-- Results with fare, duration, status, aircraft type, and class-aware seat pricing.
+- Results with fare, duration, status, aircraft type, class-aware seat pricing, sorting, and pagination.
 - Booking flow with passenger details, visual seat map, optimistic seat selection, and a dedicated PNR confirmation page.
 - Supabase Realtime subscription on `seats` for live availability updates.
-- My Bookings page with status badges, date-filtered reschedule picker, reschedule confirmation, cancellation confirmation, and offline cached visibility.
+- My Bookings page with status badges, date-filtered reschedule picker, reschedule confirmation, cancellation confirmation, mobile bottom-sheet dialogs, and offline cached visibility.
 - PWA manifest, install banner, offline fallback page, and caching rules for flight search/static assets.
 
 ## Local Setup
@@ -50,9 +50,10 @@ The app includes demo fallback data if Supabase env vars are missing, so the res
 
 - `reserve_seat` locks the selected `seats` row with `FOR UPDATE`, rejects unavailable seats, marks the seat unavailable, inserts the booking, and inserts passenger data in one transaction.
 - `cancel_booking` updates booking status and frees the seat inside a single RPC. The `bookings_reject_late_cancellation` trigger blocks cancellations within two hours of departure at DB level.
-- `reschedule_booking` only allows same-route flight changes, moves the booking to the same seat number on the new flight when available, frees the old seat, locks the new seat, and charges the difference when the new flight is more expensive.
+- `reschedule_booking` only allows same-route flight changes, prefers the same seat number on the new flight, falls back to another available same-class seat, frees the old seat, locks the new seat, and charges the difference when the new flight is more expensive.
 - RLS is enabled on all tables. Users can read and mutate only their own booking-related rows. Flights and seats are public read models.
 - `202605230006_six_month_daily_network.sql` creates one scheduled flight per day for every directed airport pair already present in the flight table. With the current five airports, that is 3600 generated flights and full seat maps.
+- `202605230007_reschedule_seat_fallback.sql` improves rescheduling by automatically assigning another available seat if the original seat number is occupied on the new flight.
 
 ## Zustand Store Structure
 
