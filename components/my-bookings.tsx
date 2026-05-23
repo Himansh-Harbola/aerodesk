@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { CalendarClock, Check, RotateCcw, X, XCircle } from "lucide-react";
 import { cancelBooking, rescheduleBooking } from "@/lib/actions";
 import type { BookingWithRelations, Flight } from "@/lib/types";
@@ -19,6 +19,7 @@ export function MyBookings({
   const [bookings, setBookings] = useState(initialBookings);
   const [message, setMessage] = useState<string | null>(null);
   const [rescheduleTarget, setRescheduleTarget] = useState<BookingWithRelations | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
   const [cancelTarget, setCancelTarget] = useState<BookingWithRelations | null>(null);
   const [currentTime] = useState(() => Date.now());
   const [isPending, startTransition] = useTransition();
@@ -26,16 +27,28 @@ export function MyBookings({
   const setCachedBookings = useUserStore((state) => state.setCachedBookings);
   const resetBooking = useFlightStore((state) => state.resetBooking);
   const visibleBookings = bookings.length > 0 ? bookings : cachedBookings;
-  const alternatives = rescheduleTarget
-    ? flights.filter(
+  const sameRouteFlights = useMemo(
+    () =>
+      rescheduleTarget
+        ? flights.filter(
+            (flight) =>
+              flight.id !== rescheduleTarget.flight_id &&
+              flight.origin === rescheduleTarget.flights.origin &&
+              flight.destination === rescheduleTarget.flights.destination &&
+              flight.status !== "cancelled",
+          )
+        : [],
+    [flights, rescheduleTarget],
+  );
+  const alternatives = useMemo(
+    () =>
+      sameRouteFlights.filter(
         (flight) =>
-          flight.id !== rescheduleTarget.flight_id &&
-          flight.origin === rescheduleTarget.flights.origin &&
-          flight.destination === rescheduleTarget.flights.destination &&
-          flight.status !== "cancelled" &&
+          (!rescheduleDate || flight.departs_at.startsWith(rescheduleDate)) &&
           new Date(flight.departs_at).getTime() > currentTime,
-      )
-    : [];
+      ),
+    [currentTime, rescheduleDate, sameRouteFlights],
+  );
 
   useEffect(() => {
     if (initialBookings.length > 0) {
@@ -149,7 +162,11 @@ export function MyBookings({
                 <div className="flex flex-wrap gap-2">
                   <button
                     disabled={isPending || booking.status === "cancelled"}
-                    onClick={() => setRescheduleTarget(booking)}
+                    onClick={() => {
+                      setRescheduleTarget(booking);
+                      setRescheduleDate("");
+                      setMessage(null);
+                    }}
                     className="focus-ring inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
                   >
                     <RotateCcw size={16} />
@@ -183,12 +200,42 @@ export function MyBookings({
                 <X size={18} />
               </button>
             </div>
+            <div className="mt-5 grid gap-3 rounded-lg bg-slate-50 p-4 sm:grid-cols-[1fr_auto] sm:items-end">
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Preferred travel date
+                <input
+                  className="focus-ring rounded-md border border-slate-300 bg-white px-3 py-2"
+                  min={new Date(currentTime).toISOString().slice(0, 10)}
+                  onChange={(event) => setRescheduleDate(event.target.value)}
+                  type="date"
+                  value={rescheduleDate}
+                />
+              </label>
+              <button
+                className="focus-ring rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+                onClick={() => setRescheduleDate("")}
+                type="button"
+              >
+                Show all dates
+              </button>
+              <p className="text-sm text-slate-500 sm:col-span-2">
+                Showing {alternatives.length} available future flight{alternatives.length === 1 ? "" : "s"} from {sameRouteFlights.length} same-route option{sameRouteFlights.length === 1 ? "" : "s"}.
+              </p>
+            </div>
             <div className="mt-5 grid gap-3">
               {alternatives.length === 0 ? (
-                <p className="rounded-md bg-slate-50 p-4 text-sm text-slate-600">No same-route alternatives are available right now.</p>
+                <div className="rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+                  <p>No available future flights match this route and date.</p>
+                  {sameRouteFlights.length > 0 ? (
+                    <p className="mt-1">Try clearing the date filter, or seed more future flights for this route.</p>
+                  ) : (
+                    <p className="mt-1">No same-route alternatives exist in the flights table yet.</p>
+                  )}
+                </div>
               ) : (
                 alternatives.map((flight) => {
                   const fee = Math.max(0, flight.base_price - rescheduleTarget.flights.base_price);
+                  const departureDate = new Date(flight.departs_at);
                   return (
                     <article key={flight.id} className="rounded-lg border border-slate-200 p-4">
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -198,7 +245,10 @@ export function MyBookings({
                             <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{flight.aircraft_type}</span>
                             <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">{flight.status}</span>
                           </div>
-                          <p className="mt-2 text-sm text-slate-600">{dateTime(flight.departs_at)} to {dateTime(flight.arrives_at)}</p>
+                          <p className="mt-2 text-sm font-semibold text-slate-800">
+                            {departureDate.toLocaleDateString("en-IN", { dateStyle: "full" })}
+                          </p>
+                          <p className="mt-1 text-sm text-slate-600">{dateTime(flight.departs_at)} to {dateTime(flight.arrives_at)}</p>
                           <p className="mt-1 text-sm text-slate-500">Base fare {money(flight.base_price)} · Reschedule fee {money(fee)}</p>
                         </div>
                         <button
