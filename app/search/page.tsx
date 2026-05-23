@@ -13,19 +13,17 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
   const flights = await getFlights({ origin, destination, date });
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
-      <section className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">Flight desk</p>
-          <h1 className="mt-3 max-w-xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-            Search, select seats, and manage trips in one place.
+    <main>
+      <section className="bg-[#051f3b] text-white">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-200">Flight search</p>
+          <h1 className="mt-3 max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl">
+            Compare fares, choose seats, and book in minutes.
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-            Built for the assignment requirements: live availability, persisted booking progress, Supabase-backed booking RPCs,
-            and mobile-first trip management.
-          </p>
           <SearchPanel initial={{ origin, destination, date, passengers: String(passengers || 1) }} />
         </div>
+      </section>
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <FlightResults flights={flights} passengers={passengers || 1} />
       </section>
     </main>
