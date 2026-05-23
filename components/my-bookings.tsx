@@ -20,6 +20,7 @@ export function MyBookings({
   const [message, setMessage] = useState<string | null>(null);
   const [rescheduleTarget, setRescheduleTarget] = useState<BookingWithRelations | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
+  const [pendingRescheduleFlight, setPendingRescheduleFlight] = useState<Flight | null>(null);
   const [cancelTarget, setCancelTarget] = useState<BookingWithRelations | null>(null);
   const [currentTime] = useState(() => Date.now());
   const [isPending, startTransition] = useTransition();
@@ -124,6 +125,7 @@ export function MyBookings({
               : item,
           ),
         );
+        setPendingRescheduleFlight(null);
         setRescheduleTarget(null);
       }
     });
@@ -165,6 +167,7 @@ export function MyBookings({
                     onClick={() => {
                       setRescheduleTarget(booking);
                       setRescheduleDate("");
+                      setPendingRescheduleFlight(null);
                       setMessage(null);
                     }}
                     className="focus-ring inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
@@ -196,7 +199,15 @@ export function MyBookings({
                   Same route: {rescheduleTarget.flights.origin} to {rescheduleTarget.flights.destination}. Fee is only charged when the new base fare is higher.
                 </p>
               </div>
-              <button className="focus-ring rounded-md p-2 hover:bg-slate-100" onClick={() => setRescheduleTarget(null)} type="button" aria-label="Close reschedule dialog">
+              <button
+                className="focus-ring rounded-md p-2 hover:bg-slate-100"
+                onClick={() => {
+                  setPendingRescheduleFlight(null);
+                  setRescheduleTarget(null);
+                }}
+                type="button"
+                aria-label="Close reschedule dialog"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -254,11 +265,11 @@ export function MyBookings({
                         <button
                           className="focus-ring inline-flex items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                           disabled={isPending}
-                          onClick={() => reschedule(rescheduleTarget, flight)}
+                          onClick={() => setPendingRescheduleFlight(flight)}
                           type="button"
                         >
                           <Check size={16} />
-                          Select flight
+                          Review change
                         </button>
                       </div>
                     </article>
@@ -266,6 +277,34 @@ export function MyBookings({
                 })
               )}
             </div>
+            {pendingRescheduleFlight ? (
+              <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <h3 className="font-semibold text-slate-950">Confirm reschedule</h3>
+                <p className="mt-2 text-sm text-slate-700">
+                  Move PNR {rescheduleTarget.pnr_code} from {rescheduleTarget.flights.flight_no} on {dateTime(rescheduleTarget.flights.departs_at)} to {pendingRescheduleFlight.flight_no} on {dateTime(pendingRescheduleFlight.departs_at)}.
+                </p>
+                <p className="mt-1 text-sm text-slate-600">
+                  Reschedule fee: {money(Math.max(0, pendingRescheduleFlight.base_price - rescheduleTarget.flights.base_price))}
+                </p>
+                <div className="mt-4 flex flex-wrap justify-end gap-2">
+                  <button
+                    className="focus-ring rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+                    onClick={() => setPendingRescheduleFlight(null)}
+                    type="button"
+                  >
+                    Choose another
+                  </button>
+                  <button
+                    className="focus-ring rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                    disabled={isPending}
+                    onClick={() => reschedule(rescheduleTarget, pendingRescheduleFlight)}
+                    type="button"
+                  >
+                    Confirm reschedule
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </section>
         </div>
       ) : null}
