@@ -68,6 +68,27 @@ export async function getSeatsForFlight(flightId: string): Promise<Seat[]> {
   return data ?? [];
 }
 
+export async function getSeatById(id: string): Promise<Seat | null> {
+  noStore();
+  const supabase = await createClient();
+
+  if (!supabase || !hasSupabaseServerEnv) {
+    for (const flight of demoFlights) {
+      const seat = makeDemoSeats(flight.id).find((item) => item.id === id);
+      if (seat) return seat;
+    }
+    return null;
+  }
+
+  const { data, error } = await supabase.from("seats").select("*").eq("id", id).single();
+  if (error) {
+    console.error(error.message);
+    return null;
+  }
+
+  return data;
+}
+
 export async function getBookingsForCurrentUser(): Promise<BookingWithRelations[]> {
   noStore();
   const supabase = await createClient();

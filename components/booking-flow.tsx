@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, CreditCard, UserRound } from "lucide-react";
 import { createBooking } from "@/lib/actions";
 import type { Flight, PassengerDraft, Seat } from "@/lib/types";
@@ -10,6 +11,7 @@ import { useFlightStore } from "@/stores/flight-store";
 import { SeatMap } from "@/components/seat-map";
 
 export function BookingFlow({ flight, seats }: { flight: Flight; seats: Seat[] }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{ ok: boolean; message: string; pnr?: string } | null>(null);
   const selectedSeat = useFlightStore((state) => state.selectedSeat);
@@ -43,6 +45,13 @@ export function BookingFlow({ flight, seats }: { flight: Flight; seats: Seat[] }
       setResult(response);
       if (response.ok) {
         resetBooking();
+        const params = new URLSearchParams({
+          pnr: response.pnr ?? "",
+          flightId: flight.id,
+          seatId: activeSeat.id,
+          total: String(total),
+        });
+        router.push(`/confirmation?${params.toString()}`);
       }
     });
   }

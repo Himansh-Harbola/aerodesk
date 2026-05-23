@@ -16,11 +16,13 @@ export function SeatMap({
   flightId,
   initialSeats,
   selectedSeatId,
+  yourSeatId,
   onSelect,
 }: {
   flightId: string;
   initialSeats: Seat[];
   selectedSeatId?: string;
+  yourSeatId?: string;
   onSelect: (seat: Seat) => void;
 }) {
   const [seats, setSeats] = useState(initialSeats);
@@ -70,11 +72,11 @@ export function SeatMap({
               <div key={row} className="grid grid-cols-[2rem_repeat(3,2.75rem)_1.5rem_repeat(3,2.75rem)] items-center gap-2">
                 <span className="text-center text-xs font-semibold text-slate-500">{row}</span>
                 {rowSeats.slice(0, 3).map((seat) => (
-                  <SeatButton key={seat.id} seat={seat} selected={seat.id === selectedSeatId} onSelect={onSelect} />
+                  <SeatButton key={seat.id} seat={seat} selected={seat.id === selectedSeatId} yourSeat={seat.id === yourSeatId} onSelect={onSelect} />
                 ))}
                 <span className="text-center text-[10px] font-semibold uppercase text-slate-400">{zone === "economy" ? "" : zone[0]}</span>
                 {rowSeats.slice(3).map((seat) => (
-                  <SeatButton key={seat.id} seat={seat} selected={seat.id === selectedSeatId} onSelect={onSelect} />
+                  <SeatButton key={seat.id} seat={seat} selected={seat.id === selectedSeatId} yourSeat={seat.id === yourSeatId} onSelect={onSelect} />
                 ))}
               </div>
             );
@@ -86,13 +88,24 @@ export function SeatMap({
           <span key={seatClass} className="rounded-full border border-slate-200 bg-white px-3 py-1">{classLabels[seatClass]}</span>
         ))}
         <span className="rounded-full bg-[var(--primary)] px-3 py-1 text-white">Selected</span>
+        <span className="rounded-full bg-slate-950 px-3 py-1 text-white">Your seat</span>
         <span className="rounded-full bg-slate-300 px-3 py-1 text-slate-700">Occupied</span>
       </div>
     </div>
   );
 }
 
-function SeatButton({ seat, selected, onSelect }: { seat: Seat; selected: boolean; onSelect: (seat: Seat) => void }) {
+function SeatButton({
+  seat,
+  selected,
+  yourSeat,
+  onSelect,
+}: {
+  seat: Seat;
+  selected: boolean;
+  yourSeat: boolean;
+  onSelect: (seat: Seat) => void;
+}) {
   const available = seat.is_available;
   const classColor = seat.class === "first" ? "border-amber-300 bg-amber-50" : seat.class === "business" ? "border-sky-300 bg-sky-50" : "border-emerald-300 bg-emerald-50";
 
@@ -104,7 +117,7 @@ function SeatButton({ seat, selected, onSelect }: { seat: Seat; selected: boolea
       onClick={() => onSelect(seat)}
       className={[
         "focus-ring h-11 rounded-md border text-xs font-semibold transition",
-        selected ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-sm" : classColor,
+        yourSeat ? "border-slate-950 bg-slate-950 text-white shadow-sm" : selected ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-sm" : classColor,
         !available ? "cursor-not-allowed border-slate-300 bg-slate-300 text-slate-500" : "hover:-translate-y-0.5",
       ].join(" ")}
     >

@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useFlightStore } from "@/stores/flight-store";
 import { useUserStore } from "@/stores/user-store";
 
+const bookingCacheKey = "aerodesk-bookings-cache";
+
 export function MyBookings({
   initialBookings,
   flights,
@@ -16,7 +18,9 @@ export function MyBookings({
   initialBookings: BookingWithRelations[];
   flights: Flight[];
 }) {
-  const [bookings, setBookings] = useState(initialBookings);
+  const [bookings, setBookings] = useState<BookingWithRelations[]>(() =>
+    initialBookings.length > 0 ? initialBookings : readCachedBookings(),
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [rescheduleTarget, setRescheduleTarget] = useState<BookingWithRelations | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
@@ -54,6 +58,7 @@ export function MyBookings({
   useEffect(() => {
     if (initialBookings.length > 0) {
       setCachedBookings(initialBookings);
+      window.localStorage.setItem(bookingCacheKey, JSON.stringify(initialBookings));
     }
   }, [initialBookings, setCachedBookings]);
 
@@ -74,6 +79,7 @@ export function MyBookings({
 
       const nextBookings = data as BookingWithRelations[];
       setBookings(nextBookings);
+      window.localStorage.setItem(bookingCacheKey, JSON.stringify(nextBookings));
       if (nextBookings.length > 0) {
         setCachedBookings(nextBookings);
       }
@@ -96,7 +102,11 @@ export function MyBookings({
       setMessage(response.message);
       if (response.ok) {
         resetBooking();
-        setBookings((current) => current.map((booking) => (booking.id === id ? { ...booking, status: "cancelled" } : booking)));
+        setBookings((current) => {
+          const updated = current.map((booking) => (booking.id === id ? { ...booking, status: "cancelled" as const } : booking));
+          window.localStorage.setItem(bookingCacheKey, JSON.stringify(updated));
+          return updated;
+        });
         setCancelTarget(null);
       }
     });
@@ -112,19 +122,21 @@ export function MyBookings({
       setMessage(response.message);
       if (response.ok) {
         const fee = Math.max(0, newFlight.base_price - booking.flights.base_price);
-        setBookings((current) =>
-          current.map((item) =>
+        setBookings((current) => {
+          const updated = current.map((item) =>
             item.id === booking.id
               ? {
                   ...item,
-                  status: "rescheduled",
+                  status: "rescheduled" as const,
                   flight_id: newFlight.id,
                   flights: newFlight,
                   total_price: item.total_price + fee,
-                }
+              }
               : item,
-          ),
-        );
+          );
+          window.localStorage.setItem(bookingCacheKey, JSON.stringify(updated));
+          return updated;
+        });
         setPendingRescheduleFlight(null);
         setRescheduleTarget(null);
       }
@@ -342,6 +354,17 @@ function badgeClass(status: BookingWithRelations["status"]) {
 }
 
 type BrowserSupabase = NonNullable<ReturnType<typeof createClient>>;
+
+function readCachedBookings() {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const cached = window.localStorage.getItem(bookingCacheKey);
+    return cached ? (JSON.parse(cached) as BookingWithRelations[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 async function cancelBookingFromBrowser(supabase: BrowserSupabase, bookingId: string) {
   const { error } = await supabase.rpc("cancel_booking", { p_booking_id: bookingId });

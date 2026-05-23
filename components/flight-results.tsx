@@ -38,6 +38,17 @@ export function FlightResults({ flights, passengers }: { flights: Flight[]; pass
                     <span className="inline-flex items-center gap-1 text-slate-500"><Clock size={15} /> {duration(flight)}</span>
                   </div>
                   <p className="mt-2 text-sm text-slate-500">{dateTime(flight.departs_at)} to {dateTime(flight.arrives_at)}</p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-800">
+                      Economy {money(flight.base_price)}
+                    </span>
+                    <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 font-semibold text-sky-800">
+                      Business from {money(flight.base_price + 4500)}
+                    </span>
+                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-semibold text-amber-800">
+                      First from {money(flight.base_price + 9000)}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
                   <div className="text-right">
